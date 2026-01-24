@@ -112,6 +112,66 @@ def analyze_embryo(input_file, output_prefix="embryo_analysis"):
     
     print(f"Analysis complete. Plots saved to current directory.")
 
+    # --- Micro-dynamics / Micro-state Analysis ---
+    print("Performing Micro-dynamics Analysis...")
+    try:
+        from scipy.signal import savgol_filter
+        
+        # We analyze fluctuations in the Principal Axis lengths (sqrt(eigenvalues))
+        # l1_len = sqrt(l1), etc.
+        l1_len = np.sqrt(results['l1'])
+        l2_len = np.sqrt(results['l2'])
+        l3_len = np.sqrt(results['l3'])
+        
+        # 1. Calculate Macro-state (Smooth Trend)
+        # Window size must be odd. Adjust based on frame rate. 
+        # If we have 195 frames, a window of ~21 frames seems reasonable to capture "slow" growth.
+        window_size = 21 
+        poly_order = 3
+        
+        l1_trend = savgol_filter(l1_len, window_size, poly_order)
+        l2_trend = savgol_filter(l2_len, window_size, poly_order)
+        l3_trend = savgol_filter(l3_len, window_size, poly_order)
+        
+        # 2. Calculate Micro-state (Residuals / Fluctuations)
+        l1_micro = l1_len - l1_trend
+        l2_micro = l2_len - l2_trend
+        l3_micro = l3_len - l3_trend
+        
+        # Plot 4: Micro-state Fluctuations
+        plt.figure(figsize=(12, 6))
+        plt.plot(results['t'], l1_micro, label='Length Fluctuations (PC1)', alpha=0.8)
+        plt.plot(results['t'], l2_micro, label='Width Fluctuations (PC2)', alpha=0.8)
+        plt.plot(results['t'], l3_micro, label='Depth Fluctuations (PC3)', alpha=0.8)
+        plt.xlabel('Time (frames)')
+        plt.ylabel('Deviation from Trend (pixels)')
+        plt.title('Micro-dynamics: High-Frequency Shape Fluctuations')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.savefig(f"{output_prefix}_micro_fluctuations.png")
+        
+        # Plot 5: Fluctuation Intensity (Variance of micro-states over sliding window)
+        # This helps see *when* the embryo is most active/twitching
+        window = 5
+        activity = pd.Series(l1_micro).rolling(window=window).std().fillna(0) + \
+                   pd.Series(l2_micro).rolling(window=window).std().fillna(0)
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(results['t'], activity, color='purple')
+        plt.xlabel('Time (frames)')
+        plt.ylabel('Fluctuation Intensity (std dev)')
+        plt.title('Micro-state Activity Levels (Twitching Analysis)')
+        plt.fill_between(results['t'], activity, color='purple', alpha=0.2)
+        plt.grid(True)
+        plt.savefig(f"{output_prefix}_activity_intensity.png")
+        
+        print("Micro-dynamics analysis complete.")
+        
+    except ImportError:
+        print("Error: Scipy not installed. Skipping micro-dynamics analysis.")
+    except Exception as e:
+        print(f"Error in micro-dynamics analysis: {e}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file", type=str, default="tracks.csv")
