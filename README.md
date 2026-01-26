@@ -45,3 +45,14 @@ python -m Scripts.analyze_embryo --input_file tracks.csv
 python -m Scripts.create_development_video --results embryo_analysis_results.csv --data_dir Data/Train_Data/Fluo-N3DH-CE/01
 ```
 *Outputs `embryo_development.mp4`*
+
+## Demo Output
+
+### 3D Embryo Structure & Trajectories
+![3D Structure](Plots/dataset_plot_3d_structure.png)
+![Trajectories](Plots/dataset_plot_trajectories.png)
+
+### Development Animation
+Synchronized view of Raw Data, Micro-dynamics, and Behavioral States:
+![Development Animation](embryo_development.gif)
+
