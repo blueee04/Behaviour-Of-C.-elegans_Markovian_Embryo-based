@@ -54,5 +54,5 @@ python -m Scripts.create_development_video --results embryo_analysis_results.csv
 
 ### Development Animation
 Synchronized view of Raw Data, Micro-dynamics, and Behavioral States:
-![Development Animation](embryo_development.gif)
+![Development Animation](Plots/embryo_development.gif)
 
